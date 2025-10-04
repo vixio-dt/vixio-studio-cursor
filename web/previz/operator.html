@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Vixio Operator</title>
+  </head>
+  <body>
+    <div id="brandbar">
+      <img src="/logo/vixio-logo.svg" alt="Vixio" />
+    </div>
+    <div style="position:absolute; inset:56px 0 0 0; padding:12px; display:flex; gap:12px; flex-wrap:wrap;">
+      <div class="panel" style="min-width:280px;">
+        <div style="margin-bottom:6px">Transport</div>
+        <div style="display:flex; gap:6px;">
+          <button id="standby">Standby</button>
+          <button id="go">GO</button>
+          <button id="hold">Hold</button>
+        </div>
+      </div>
+      <div class="panel" style="min-width:280px;">
+        <div style="margin-bottom:6px;">Timecode</div>
+        <div id="tc">00:00:00:00</div>
+      </div>
+    </div>
+    <script type="module">
+      const httpUrl = (import.meta.env && import.meta.env.VITE_GATEWAY_HTTP_URL) || 'http://localhost:8080';
+      const token = (window.localStorage && localStorage.getItem('vixio_token')) || '';
+      const headers = token ? { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` } : { 'Content-Type':'application/json' };
+      const post = (p, b) => fetch(`${httpUrl}${p}`, { method:'POST', headers, body: JSON.stringify(b) }).catch(()=>{});
+
+      document.getElementById('standby').onclick = () => post('/cue/trigger', { type:'op', id:'standby' });
+      document.getElementById('go').onclick = () => post('/cue/trigger', { type:'op', id:'go' });
+      document.getElementById('hold').onclick = () => post('/cue/trigger', { type:'op', id:'hold' });
+
+      // Subscribe WS for timecode
+      const wsUrl = (import.meta.env && import.meta.env.VITE_GATEWAY_WS_URL) || 'ws://localhost:8080/ws';
+      const ws = new WebSocket(wsUrl);
+      const tcEl = document.getElementById('tc');
+      ws.onmessage = (ev) => {
+        try { const msg = JSON.parse(ev.data); if (msg.type==='tc' && msg.tc) tcEl.textContent = msg.tc; } catch {}
+      };
+    </script>
+  </body>
+</html>

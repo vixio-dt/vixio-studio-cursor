@@ -1,0 +1,79 @@
+services:
+  narrative-service:
+    build:
+      context: ./services/narrative-service
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  cue-engine:
+    build:
+      context: ./services/cue-engine
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+    depends_on:
+      - narrative-service
+
+  device-gateway:
+    build:
+      context: ./services/device-gateway
+    environment:
+      - UPSTREAM_ENGINE_URL=http://cue-engine:8000
+      - OSC_ENABLED=true
+      - OSC_HOST=127.0.0.1
+      - OSC_PORT=9000
+      - SACN_ENABLED=true
+      - SACN_UNIVERSE=1
+      - SACN_DIRECT=true
+      - SACN_TARGET_HOST=127.0.0.1
+      - SACN_BRIDGE_URL=http://sacn-bridge:9001
+      - AI_PROVIDER=openai
+      - OPENAI_BASE_URL=https://openrouter.ai/api/v1
+      - OPENAI_MODEL=x-ai/grok-4-fast:free
+      - OPENROUTER_KEY_GROK=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
+      - OPENROUTER_KEY_DEEPSEEK=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
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - cue-engine
+    volumes:
+      - ./data/gateway:/data
+
+  web-previs:
+    build:
+      context: ./web/previz
+    environment:
+      - VITE_GATEWAY_WS_URL=ws://localhost:8080/ws
+      - VITE_GATEWAY_HTTP_URL=http://localhost:8080
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    depends_on:
+      - device-gateway
+
+  sacn-bridge:
+    build:
+      context: ./services/sacn-bridge
+    ports:
+      - "9001:9001"
+    restart: unless-stopped
+
+  web-storyflow:
+    build: ./web/storyflow
+    restart: unless-stopped
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_GATEWAY_HTTP_URL=http://device-gateway:8080
+      - VITE_COLLAB_WS_URL=ws://device-gateway:8080/collab
+      - VITE_AUTH_TOKEN=${BEARER_TOKEN:-}
+    depends_on:
+      - device-gateway
+
+networks:
+  default:
+    name: vixio-studio
+
+

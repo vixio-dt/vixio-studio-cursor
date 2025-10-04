@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@root/*": ["./*"],
+      "@services/*": ["./services/*"],
+      "@schemas/*": ["./services/narrative-service/schemas/*"],
+      "@story/*": ["./web/storyflow/src/*"]
+    }
+  }
+}

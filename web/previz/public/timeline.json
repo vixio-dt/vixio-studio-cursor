@@ -1,0 +1,9 @@
+{
+  "fps": 30,
+  "events": [
+    { "t": 5.0,  "payload": { "type": "cue", "id": "room.scale", "args": { "s": 1.2 } } },
+    { "t": 10.0, "payload": { "type": "cue", "id": "room.scale", "args": { "s": 0.8 } } },
+    { "t": 15.0, "payload": { "type": "cue", "id": "room.scale", "args": { "s": 1.0 } } }
+  ]
+}
+

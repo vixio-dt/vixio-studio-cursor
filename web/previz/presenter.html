@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Vixio Presenter</title>
+  </head>
+  <body>
+    <div id="brandbar">
+      <img src="/logo/vixio-logo.svg" alt="Vixio" />
+    </div>
+    <div id="app" style="position:absolute; inset:56px 0 0 0; display:flex; align-items:center; justify-content:center;">
+      <div class="panel" style="min-width:280px; text-align:center;">
+        <div style="margin-bottom:8px">Read-only client preview</div>
+        <div>WS: <span id="ws">connecting…</span></div>
+      </div>
+    </div>
+    <script type="module">
+      const wsUrl = (import.meta.env && import.meta.env.VITE_GATEWAY_WS_URL) || 'ws://localhost:8080/ws';
+      const wsEl = document.getElementById('ws');
+      const socket = new WebSocket(wsUrl);
+      socket.onopen = () => (wsEl.textContent = 'connected');
+      socket.onclose = () => (wsEl.textContent = 'closed');
+      socket.onerror = () => (wsEl.textContent = 'error');
+      const panel = document.querySelector('.panel');
+      let last = '-';
+      socket.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === 'cue') {
+            last = `${msg.id} ${(msg.args?JSON.stringify(msg.args):'')}`;
+            panel.innerHTML = `<div style=\"margin-bottom:8px\">Read-only client preview</div><div>Last cue: <code>${last}</code></div><div>WS: <span id=\"ws\">connected</span></div>`;
+          }
+        } catch {}
+      };
+    </script>
+  </body>
+  </html>
+

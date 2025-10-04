@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Vixio Story Builder</title>
+    <style>
+      #toolbar { position: fixed; top: 56px; left: 0; right: 0; display:flex; gap:8px; padding:8px 12px; background: rgba(10,12,16,0.7); border-bottom:1px solid var(--brand-border); z-index:9; }
+      #canvasWrap { position: absolute; top: 96px; left: 0; right: 320px; bottom: 0; overflow: hidden; background: #05060a; cursor: grab; }
+      #canvasInner { position: absolute; transform-origin: 0 0; }
+      #lanes { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; }
+      #edges { position:absolute; top:0; left:0; pointer-events:none; }
+      .node { position: absolute; width: 180px; min-height: 60px; padding:10px; border:1px solid var(--brand-border); border-radius:12px; background: rgba(18,22,30,0.92); backdrop-filter: blur(6px); color: var(--brand-text); cursor: move; user-select: none; box-shadow:0 8px 20px rgba(0,0,0,0.35); transition: box-shadow .2s; }
+      .node.selected { outline: 2px solid var(--brand-accent-1); box-shadow:0 12px 28px rgba(31,155,255,0.3); }
+      .node .badge { display:inline-block; margin-top:4px; padding:2px 6px; font-size:10px; border-radius:6px; background:rgba(141,211,255,0.15); color:var(--brand-accent-1); }
+      .cue-pill { display:inline-flex; align-items:center; gap:4px; margin:4px 4px 0 0; padding:2px 6px; font-size:10px; border-radius:999px; background:rgba(141,211,255,0.15); color:var(--brand-accent-1); }
+      #inspector { position: absolute; top: 56px; right: 0; width: 320px; bottom: 0; border-left:1px solid var(--brand-border); background: var(--brand-panel); padding:12px; overflow:auto; }
+      #inspector input, #inspector select { width: 100%; margin-bottom: 8px; }
+      #cueList button { width:100%; margin-bottom:6px; }
+      #cueItems .cue-item { border:1px solid var(--brand-border); padding:6px; border-radius:6px; margin-bottom:6px; background:rgba(18,22,30,0.9); cursor:pointer; }
+      #cueItems .cue-item.selected { outline:1px solid var(--brand-accent-1); }
+      #brandbar { z-index: 10; }
+      #miniMap { position: fixed; right: 336px; bottom: 16px; width: 160px; height: 100px; border:1px solid var(--brand-border); background:rgba(8,10,14,0.85); z-index:5; }
+      #miniMap div { position:absolute; border:1px solid var(--brand-accent-1); }
+      #warnings { margin-top:12px; font-size:12px; color:#f9d87f; }
+    </style>
+  </head>
+  <body>
+    <div id="brandbar">
+      <img src="/logo/vixio-logo.svg" alt="Vixio" />
+    </div>
+    <div id="toolbar" class="panel">
+      <button id="addBeat">Add Beat</button>
+      <button id="saveStory">Save</button>
+      <button id="publishStory">Publish</button>
+      <span id="status" style="opacity:0.8"></span>
+    </div>
+    <div id="canvasWrap">
+      <div id="canvasInner">
+        <div id="lanes"></div>
+        <svg id="edges"></svg>
+      </div>
+      <div id="miniMap" class="panel" style="padding:0;"></div>
+    </div>
+    <div id="inspector">
+      <div class="panel" style="background:transparent; border:none;">
+        <div style="margin-bottom:6px;">Inspector</div>
+        <label>Selected Beat</label>
+        <input id="i_id" placeholder="id" disabled />
+        <label>Title</label>
+        <input id="i_title" placeholder="title" />
+        <label>Zone</label>
+        <input id="i_zone" placeholder="zone" />
+        <label>Time Hint (s)</label>
+        <input id="i_thint" type="number" step="0.1" placeholder="e.g. 5" />
+        <label>Order</label>
+        <input id="i_order" type="number" step="1" placeholder="1" />
+        <button id="i_delete" style="margin-top:8px;">Delete Beat</button>
+      </div>
+      <hr class="accent"/>
+      <div class="panel" style="background:transparent; border:none;">
+        <div style="margin-bottom:6px;">Cue Palette</div>
+        <select id="cue_type">
+          <option value="lighting.fade">lighting.fade</option>
+          <option value="osc.send">osc.send</option>
+          <option value="media.play">media.play</option>
+          <option value="previz.marker.show">previz.marker.show</option>
+          <option value="previz.camera.flyTo">previz.camera.flyTo</option>
+        </select>
+        <label>Trigger</label>
+        <select id="cue_trigger">
+          <option value="manual">manual</option>
+          <option value="timecode">timecode</option>
+          <option value="state">state</option>
+        </select>
+        <input id="cue_trigger_val" placeholder="hh:mm:ss or state key" />
+        <label>Priority</label>
+        <input id="cue_priority" type="number" value="50" />
+        <button id="cue_add">Add Cue to Beat</button>
+        <div id="cueItems" style="margin-top:10px;"></div>
+        <div id="cueEdit" style="margin-top:12px; display:none;">
+          <hr class="accent"/>
+          <div style="margin-bottom:6px;">Edit Cue</div>
+          <input id="cue_edit_id" placeholder="cue id" disabled />
+          <label>Type</label>
+          <input id="cue_edit_type" disabled />
+          <label>Priority</label>
+          <input id="cue_edit_priority" type="number" />
+          <label>Trigger kind</label>
+          <select id="cue_edit_trigger">
+            <option value="manual">manual</option>
+            <option value="timecode">timecode</option>
+            <option value="state">state</option>
+          </select>
+          <input id="cue_edit_trigger_val" placeholder="hh:mm:ss or state key" />
+          <label>Args (JSON)</label>
+          <textarea id="cue_edit_args" rows="5" style="width:100%;"></textarea>
+          <button id="cue_update">Update Cue</button>
+          <button id="cue_remove" style="margin-top:6px;">Remove Cue</button>
+        </div>
+      </div>
+      <div id="warnings"></div>
+    </div>
+    <script type="module" src="/builder.js"></script>
+  </body>
+  </html>
+

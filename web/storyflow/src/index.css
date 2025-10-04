@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --surface-0: #ffffff;
+    --surface-1: #f7f8fa;
+    --surface-2: #eef1f4;
+    --surface-3: #e6eaf0;
+    --panel-90: rgba(255, 255, 255, 0.9);
+    --panel-80: rgba(255, 255, 255, 0.8);
+    --text-primary: #0f1119;
+    --text-secondary: rgba(15, 17, 25, 0.7);
+    --text-muted: rgba(15, 17, 25, 0.55);
+    --accent-1: #57b5f6;
+    --accent-2: #8cd1ff;
+    --accent-warm: #f0f3a2;
+    --accent-audio: #5ac5ff;
+    --accent-lighting: #90e0ff;
+    --accent-1-soft: rgba(87, 181, 246, 0.12);
+    --accent-2-soft: rgba(140, 209, 255, 0.12);
+    --accent-warm-soft: rgba(240, 243, 162, 0.16);
+    --accent-audio-soft: rgba(90, 197, 255, 0.14);
+    --accent-lighting-soft: rgba(144, 224, 255, 0.14);
+    --focus-ring: 2px solid rgba(87, 181, 246, 0.75);
+    --grad-brand: linear-gradient(135deg, #57b5f6 0%, #f0f3a2 50%, #8cd1ff 100%);
+    --grad-pill: linear-gradient(135deg, #57b5f6, #8cd1ff);
+    --grad-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.72));
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--surface-1);
+    color: var(--text-primary);
+    font-family: theme('fontFamily.sans');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+  }
+
+  a {
+    color: var(--accent-1);
+  }
+
+  a:hover {
+    color: var(--accent-2);
+  }
+
+  *:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 50%;
+    top: 1rem;
+    transform: translate(-50%, -160%);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: var(--grad-pill);
+    color: white;
+    box-shadow: 0 14px 45px rgba(15, 17, 25, 0.25);
+    transition: transform 160ms ease-out;
+    z-index: 2000;
+  }
+
+  .skip-link:focus {
+    transform: translate(-50%, 0);
+  }
+}
+
+@layer components {
+  .shadow-mid {
+    @apply shadow-mid;
+  }
+}
